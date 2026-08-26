@@ -1,0 +1,32 @@
+{
+  "summary": "Iterasi 94 — verifikasi Fase 58 (toleransi keterlambatan & denda berjurnal + keringanan) sesudah pemecahan rbac.py -> rbac_matrix.py dan reference.py -> reference_groups.py. Backend: 11/11 pytest LULUS (login 4 peran, /api/reference punya 269 grup termasuk late_state & late_fee_block, /api/finance/late-fees/policy, GET assess mengembalikan may_apply=true/may_waive=false untuk finance dan may_waive=true untuk finlead, POST /waive untuk finance ditolak 403 (pemisahan tugas), POST /waive dengan alasan <10 huruf ditolak 422, POST /apply idempoten — 400 'sudah ditagihkan seluruhnya' untuk penagihan kedua tanpa jurnal ganda). Frontend: LateFeePanel muncul di tab Rencana Bayar (Customer Ibu Dewi Kartika A-01) dengan data-testid late-fee-panel/policy/summary/term-row/penalty-row/grace-note utuh. Untuk finance@ tombol Tagihkan denda tersembunyi (karena denda_billable=0 — sudah ter-charge) dan tombol Beri Keringanan tersembunyi (perm.waive=false), dengan kalimat penjelas 'Keringanan denda adalah wewenang Manajer Keuangan'. Untuk finlead@ tombol Beri Keringanan muncul, dialog waive terbuka (late-fee-waive-dialog/reason/submit) dan tombol submit disabled ketika alasan 6 huruf ('pendek'). Portal pembeli (Ibu Dewi Kartika +628121111111, OTP master 000000) tab Pembayaran menampilkan kartu 'Toleransi keterlambatan & denda' (portal-late-fee-card) berisi kalimat kebijakan, baris Termin I 25% Terlambat (lewat toleransi) dan Denda Keterlambatan Rp 3.541.667 · Ditagihkan (belum dibayar) — angka SAMA dengan yang muncul di dashboard staff. Smoke: 5 halaman utama (/leads /deals /finance /gl /analytics) termuat tanpa err_nodes atau blank page. Kesimpulan: pemecahan rbac_matrix.py & reference_groups.py TIDAK MERUSAK RBAC/enum/registry apa pun; alur Fase 58 end-to-end HIJAU.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_late_fee_p58.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/it94_p58.xml",
+    "/app/test_reports/it94_finance_rencanabayar.png",
+    "/app/test_reports/it94_finlead_rencanabayar.png",
+    "/app/test_reports/it94_waive_dialog.png",
+    "/app/test_reports/it94_portal_home.png",
+    "/app/test_reports/it94_portal_payments.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "rbac.py 330 baris + rbac_matrix.py 487 baris = pemecahan bersih; require_permission/can/audit_log tetap di rbac.py, matriks izin per-peran dipindah ke rbac_matrix.py. late_fee_router.py mengimpor dari rbac (bukan rbac_matrix) sehingga pemetaan seragam.",
+    "reference.py 284 baris + reference_groups.py 527 baris; late_state & late_fee_block ada di registry (verifikasi via /api/reference — 269 grup, keduanya hadir).",
+    "late_fee_engine.py memaksa satu mesin: denda dari fungsi assess/apply/waive; source_event menjaga idempoten per (termin, bulan). Pola sudah dijaga gate 49 & mutasi_58 (31/31 tertangkap per catatan main agent).",
+    "UI banner 'Yang sudah ada dan yang belum' di tab Rencana Bayar sudah menjelaskan hubungan Fase 58 dan Fase 56 secara jujur — bagus untuk auditor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_late_fee_p58.py"
+  ],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% (LateFeePanel, dialog waive, portal card, 5 halaman smoke)"},
+  "test_credentials": "finance@/finlead@/sales@/owner@sipro.co.id sandi Sipro#2026; portal Ibu Dewi Kartika +628121111111 OTP master 000000",
+  "seed_data_creation": "Tidak menambah/menghapus data demo. A-01 (Dewi Kartika) sudah punya 1 denda Rp 3.541.667 tertagih dari sesi sebelumnya — dipakai untuk membuktikan idempoten (percobaan ke-2 apply dijawab 400 'sudah ditagihkan seluruhnya').",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fase 58 end-to-end HIJAU. Pemecahan modul rbac_matrix.py & reference_groups.py aman. Untuk uji ulang jalur waive→jurnal reversal live, jalankan seed_reset.sh dulu (data live sudah ter-charge). Row-scope 403 sales tidak diuji live karena semua 4 deal demo dimiliki sales@; verifikasi kode di late_fee_router._deal_scoped() cukup jujur (is_scoped_sales + assigned_to check)."
+}

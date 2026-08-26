@@ -1,0 +1,47 @@
+{
+  "summary": "Uji peramban Fase 56C (frontend-only). Layar STAF sebagian besar bekerja: panel Pembatalan di Kontrak & Legal, tab Keuangan 'Pembatalan & Refund', KPI, kolom, dan navigasi 'Buka' mendarat pada tab kontrak53. Regresi Fase 53/56B (contract-out-of-scope) HIJAU. Ditemukan 2 bug KRITIS: (1) endpoint /api/cancellations/preview mengembalikan baris riwayat MENTAH — tidak melewati cx.enrich() — sehingga CancellationPanel di profil pembeli tidak pernah menampilkan penahanan refund, dan dialog 'Bayar refund' selalu menampilkan Sisa 0 tanpa opsi 'Abaikan penahanan'. Akibatnya Manajer Keuangan TIDAK BISA membayar refund lewat layar Kontrak & Legal. (2) Portal pembeli menggunakan URL API yang salah (/cancellations bukan /portal/cancellations) menyebabkan 401 → auto-logout saat tab Pembatalan dibuka. Bug portal SUDAH DIPERBAIKI oleh saya (1 baris).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "GET /api/cancellations/preview", "issue": "history rows tidak di-enrich: field refund_hold, refund_outstanding, refund_payable, can_pay_refund selalu null. Bandingkan dengan GET /api/cancellations yang benar (dijalankan enrich). Panel Kontrak & Legal dan dialog Bayar refund pakai endpoint preview → jadi rusak.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "components/contracts/CancellationPanel.js (dialog Bayar refund)", "issue": "Karena data dari /cancellations/preview belum di-enrich, dialog selalu menulis 'Sisa utang refund: 0' dan tombol Kirim menghasilkan 400. Setelah backend memperbaiki enrich, dialog akan menampilkan Sisa dan (untuk finlead) checkbox 'Abaikan penahanan'.", "selector": "[data-testid=\"cancellation-refund-dialog\"]", "priority": "CRITICAL"},
+      {"component": "components/contracts/CancellationPanel.js (banner penahanan)", "issue": "data-testid=\"cancellation-refund-hold\" tidak pernah muncul di panel Kontrak & Legal setelah approve (kondisi r.refund_hold selalu null dari preview). Toast API benar, tapi banner permanen di panel hilang.", "selector": "[data-testid=\"cancellation-refund-hold\"]", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Portal pembeli → tab Pembatalan", "issue": "CancellationPanel portal memanggil URL staf '/cancellations' → 401 → sesi portal langsung di-logout (interceptor 401 di portalClient.js). Sudah diperbaiki: ganti ke '/portal/cancellations'.", "affected_selectors": ["[data-testid=\"portal-tab-cancellation\"]", "[data-testid=\"portal-cancellation-panel\"]"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/mgr_kontrak.png",
+    "/app/test_reports/finlead_after_approve.png",
+    "/app/test_reports/finlead_after_refund.png",
+    "/app/test_reports/finance_cancel.png",
+    "/app/test_reports/portal_cancel_ok.png",
+    "/app/test_reports/sales2_oos.png"
+  ],
+  "action_items": [
+    "PERBAIKI backend/cancellation_engine.py::preview() — jalankan `await enrich(org, row)` untuk setiap baris di riwayat sebelum return (atau ganti CancellationPanel agar memakai GET /api/cancellations difilter contract_id). Ini kunci untuk memulihkan banner penahanan dan dialog Bayar refund pada layar profil pembeli.",
+    "Setelah perbaikan itu, re-test alur: finlead klik 'Bayar refund' pada baris disetujui → dialog harus menampilkan Sisa Rp 552.500.000, checkbox 'Abaikan penahanan' (P56.refundOverride), textarea alasan; setelah submit riwayat cancellation-refund-payment-row muncul.",
+    "Pertimbangkan menambahkan integration test (poc/poc_56.py) yang membandingkan field-set antara response /api/cancellations (list) dan history rows di /api/cancellations/preview — supaya regresi enrich terdeteksi otomatis."
+  ],
+  "critical_code_review_comments": [
+    "cancellation_engine.preview() line 191-205: history dibaca langsung dari MongoDB tanpa memanggil enrich(); field turunan hilang. Ini adalah root cause bug staff-facing.",
+    "portal/panels/CancellationPanel.js: dulu memakai portalApi.get('/cancellations') (URL staf) — sudah saya perbaiki menjadi '/portal/cancellations'. Ini menunjukkan portalApi tidak memberi 'safety net' prefix: pertimbangkan set baseURL portalApi = API + '/portal' atau tambahkan lint-check.",
+    "portalClient.js interceptor 401 melakukan logout GLOBAL. Kombinasi dengan URL salah di atas berakibat pembeli tidak sekadar melihat error, tetapi terkick ke /portal/login — sulit didiagnosa oleh QA. Pertimbangkan menambahkan whitelist path untuk mencegah auto-logout ketika kesalahan bukan sesi kadaluarsa."
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/portal/panels/CancellationPanel.js"
+  ],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "75%"},
+  "test_credentials": "manager@sipro.co.id, finlead@sipro.co.id, finance@sipro.co.id, sales2@sipro.co.id — Sipro#2026. Portal: +6281250000501 OTP 000000.",
+  "seed_data_creation": "Tidak ada. Menggunakan seed demo BTL/2026/0046 (Ibu Ratna Demo Fase 50, KTR/2026/0001, unit A-06). CATATAN: saat menguji, saya sudah MENJALANKAN keputusan approve pada baris ini via finlead — sekarang cancellation berstatus 'disetujui', contract 'cancelled', unit A-06 dilepas ke stok. Refund belum dibayar (bug #1 menghalangi). Jika ingin data segar, jalankan ulang seed_phase56.py.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Perbaikan portal sudah diterapkan. Bug utama yang masih tersisa adalah preview() di cancellation_engine.py mengembalikan history mentah. Setelah main agent memperbaiki, uji finlead pay refund dan uji ulang panel Kontrak & Legal (banner refund-hold, tombol Bayar refund fungsional, dialog memuat Sisa & override).",
+  "rca of the issue": "Bug portal: URL relatif tanpa prefix '/portal' — dilihat dari komit lain (OverviewPanel dsb.) polanya konsisten pakai '/portal/...'; panel Pembatalan luput. Bug preview: fungsi preview() tidak memanggil enrich() pada history, padahal endpoint list /api/cancellations memanggilnya. Panel di layar profil pembeli (yang memakai preview) jadi kehilangan field turunan."
+}

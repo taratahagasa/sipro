@@ -1,0 +1,31 @@
+{
+  "summary": "Retest Fase 56C frontend (iterasi 93). SEMUA temuan iterasi 92 sudah TUNTAS: (1) Banner refund-hold BTL/2026/0046 kembali muncul (data-testid=cancellation-refund-hold) dengan bunyi 'Menunggu unit terjual kembali: Ketentuan SPR: pengembalian dana menyusul penjualan ulang unit A-06. Unit itu sekarang berada di stok dan belum dipesan pembeli lain. Manajer Keuangan boleh mengabaikan penahanan ini dengan alasan tertulis.'; dialog Bayar refund menampilkan checkbox 'Abaikan penahanan ini (keputusan Manajer Keuangan, tercatat)' (cancellation-refund-override) untuk finlead. (2) Tab Keuangan → Pembatalan & Refund kini punya filter keadaan (cancellations-finance-state) + kotak pencarian (cancellations-finance-search) + tombol bersihkan (cancellations-finance-reset). Pencarian 'BTL/2026/0046'→1 baris, 'Dewi'→1 baris, 'A-06'→1 baris; filter 'Diajukan (menunggu keputusan)'→0 baris dengan empty-state 'Tidak ada yang cocok dengan saringan' + 'Kosongnya daftar ini karena saringan…' (BUKAN 'Belum ada pembatalan'); KPI 'Utang refund belum dibayar' berganti keterangan 'Akun 2-1460 — dijumlah dari BARIS YANG TERSARING saja' saat saringan aktif. Tombol reset memulihkan daftar penuh (2 baris). (3) Pembayaran BTL/2026/0053 sampai LUNAS berhasil: finlead centang override, isi alasan >=10 huruf, nominal kosong=sisa penuh 65 jt, keadaan berubah menjadi 'Selesai (refund lunas)', sisa Rp 0, tombol Bayar refund menghilang (tidak bisa dibayar dua kali). (4) Dialog keputusan (cancellation-decide-dialog) di CancellationPanel.js menyediakan tombol Setujui (cancellation-decide-approve) DAN Tolak (cancellation-decide-reject); kedua tombol disabled saat catatan <10 huruf — verifikasi kode karena saat ini tidak ada baris 'diajukan' hidup. (5) Portal pembeli Ibu Dewi Kartika (+628121111111, OTP 000000) tab Pembatalan menampilkan BTL/2026/0053 Selesai (refund lunas), potongan 50% Rp 85.000.000, dikembalikan Rp 85.000.000, sisa Rp 0, riwayat 2 baris (Rp 20 jt + Rp 65 jt Transfer bank 2026-08-25), tombol berita acara ada, TIDAK ADA nomor akun akuntansi (2-1460 / 4-1200 dst) yang bocor ke layar pembeli. (6) Berpindah antar tab Keuangan (Dashboard, Arus Kas, Piutang AR, Titipan, Pembatalan & Refund) tetap sinkron dengan URL ?tab= dan tanpa galat konsol.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/it93_finance_tab.png",
+    "/app/test_reports/it93_finance_filter_diajukan.png",
+    "/app/test_reports/it93_ratna_kontrak.png",
+    "/app/test_reports/it93_refund_dialog_0046.png",
+    "/app/test_reports/it93_0053_before_pay.png",
+    "/app/test_reports/it93_0053_after_pay.png",
+    "/app/test_reports/it93_portal_home.png",
+    "/app/test_reports/it93_portal_cancel.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Pencarian di CancellationsPanel.js hanya menerapkan filter saat Enter/onBlur — sudah cukup jujur (server-side); tester perlu menekan Enter agar q dikirim. Ini bukan bug tetapi UX ringan; boleh dipertahankan.",
+    "Berhasil menghapus tautan deal basi + syarat unit.status!='available' pada refund_hold() bekerja untuk kedua kasus (0046 & 0053) — banner muncul konsisten."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "100%"},
+  "test_credentials": "finlead@sipro.co.id / Sipro#2026; portal Ibu Dewi Kartika +628121111111 OTP 000000",
+  "seed_data_creation": "Tester membayar sisa refund BTL/2026/0053 hingga lunas (Rp 65.000.000 dengan override). Sekarang BTL/2026/0053 berkeadaan 'Selesai (refund lunas)' dan tidak lagi punya sisa. BTL/2026/0046 tetap 'Refund dibayar sebagian' sisa Rp 452.500.000 (belum disentuh). Bila butuh data segar untuk pengujian ulang alur override, jalankan seed_phase56.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fase 56C sudah lulus penuh di layar. Data live berubah: BTL/2026/0053 kini LUNAS (Selesai). Untuk uji ulang alur override + partial payment yang belum lunas, harap seed_phase56 dijalankan ulang. Dialog keputusan menawarkan tombol Setujui dan Tolak tetapi tidak diuji live karena tidak ada baris berkeadaan 'diajukan' yang tersisa; kode dikonfirmasi di CancellationPanel.js (baris 389-397)."
+}

@@ -1,0 +1,44 @@
+{
+  "summary": "Retest Fase 56C (frontend-only). Bug #1 (preview() enrich) sudah PULIH: panel Kontrak & Legal kini menampilkan Sisa refund Rp 552.500.000 (BTL/2026/0046) dan Rp 85.000.000 (BTL/2026/0053); dialog Bayar refund berfungsi. Bug #2 (portal /portal/cancellations) tetap PULIH: tab Pembatalan portal terbuka tanpa logout, riwayat & angka rupiah benar, tidak ada nomor akun (2-1460) tampil di layar pembeli. Alur end-to-end BENAR: (a) finlead menyetujui BTL/2026/0053 → unit A-01 dilepas, banner refund-hold 'menunggu penjualan ulang' muncul, doc-print aktif; (b) finlead bayar refund override 85 jt → payment row + tag 'penahanan diabaikan' + state 'Refund dibayar sebagian'; (c) finance kasir boleh membuka dialog tetapi tidak melihat checkbox override (pemisahan tugas benar). Ditemukan 2 CACAT NYATA sisa: (1) BTL/2026/0046 tidak menampilkan banner refund-hold walau unit A-06 status 'available' — karena unit.deal_id masih menunjuk ke deal yang sudah dibatalkan, sehingga refund_hold() menganggap unit sudah 'terjual ulang' (data lama pra-fix belum dibersihkan / decide() tidak menghapus link deal_id di unit); (2) tab Keuangan → Pembatalan & Refund TIDAK memiliki filter keadaan maupun kotak cari sebagaimana disebut di spesifikasi review — komponen frontend/src/components/finance/CancellationsPanel.js tidak merender input filter/search.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "decide()/refund_hold() di cancellation_engine.py", "issue": "Setelah decide-approve, units.deal_id TIDAK dinolkan; refund_hold() mengecek unit.deal_id → menganggap unit sudah terjual ulang → penahanan 'menunggu_penjualan_ulang' hilang untuk kasus lama (BTL/2026/0046) meski unit.status='available'. Perlu (a) reset unit.deal_id/reserved_by_deal/booked_by_deal saat unit dilepas ke stok, atau (b) tambah syarat unit.status!='available' di refund_hold()."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "finance/CancellationsPanel.js", "issue": "Tidak ada UI filter 'keadaan' maupun kotak pencarian (nomor BTL / nama pembeli / kode unit) — spesifikasi review mensyaratkan itu. Saat ini panel hanya menampilkan tabel penuh.", "selector": "[data-testid=\"cancellations-finance-panel\"]", "priority": "MEDIUM"},
+      {"component": "contracts/CancellationPanel.js (banner)", "issue": "Banner refund-hold tidak muncul untuk BTL/2026/0046 karena backend mengembalikan refund_hold=null (lihat cacat sisa #1). UI benar; datanya yang perlu diperbaiki.", "selector": "[data-testid=\"cancellation-refund-hold\"]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/it92_finance_tab.png",
+    "/app/test_reports/it92_kontrak_legal.png",
+    "/app/test_reports/it92_refund_dialog.png",
+    "/app/test_reports/it92_after_finlead_pay.png",
+    "/app/test_reports/it92_dewi_after_approve.png",
+    "/app/test_reports/it92_0053_after_override_pay.png",
+    "/app/test_reports/it92_portal_cancel.png"
+  ],
+  "action_items": [
+    "Bersihkan link unit.deal_id (dan reserved_by_deal / booked_by_deal / customer_id) saat decide-approve melepas unit ke stok — ATAU tambahkan `unit.status == 'available'` sebagai syarat 'belum terjual ulang' pada refund_hold(). Uji ulang BTL/2026/0046 harus menampilkan banner + checkbox 'Abaikan penahanan'.",
+    "Tambahkan input filter keadaan (Select) dan kotak pencarian (Input) pada frontend/src/components/finance/CancellationsPanel.js — spesifikasi review menyebutkan filter+search wajib ada. Sekaligus tambahkan data-testid stabil (mis. cancellations-finance-search, cancellations-finance-state-filter).",
+    "Opsional: seed_phase56 / seed_phase50 boleh dijalankan ulang setelah perbaikan untuk mereset BTL/2026/0046 ke keadaan 'punya hold'."
+  ],
+  "critical_code_review_comments": [
+    "cancellation_engine.refund_hold() (line 502-513): mengandalkan unit.deal_id sebagai indikator 'terjual kembali'. Karena decide() tidak mengosongkan field itu, kondisi race: unit 'available' tetapi deal_id lama → hold hilang. Perbaiki dengan menambah pengecekan status atau membersihkan link.",
+    "finance/CancellationsPanel.js: tidak ada filter/search — bertentangan dengan spesifikasi. Data currently kecil (2 baris) sehingga tersembunyi.",
+    "portal/panels/CancellationPanel.js: berhasil menampilkan waiting-clause dan Rp yang benar. Tidak ada bocoran nomor akun ke pembeli."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "88%"},
+  "test_credentials": "finlead@sipro.co.id, finance@sipro.co.id, manager@sipro.co.id — Sipro#2026. Portal: +6281250000501 OTP master 000000.",
+  "seed_data_creation": "Tidak menambah seed. Aksi tester merubah data live: BTL/2026/0046 kini 'Refund dibayar sebagian' (finlead bayar 100 jt, sisa 452.5 jt); BTL/2026/0053 kini 'disetujui' lalu 'Refund dibayar sebagian' (override 20 jt, sisa 65 jt, unit A-01 dilepas ke stok). Bila ingin data segar, jalankan ulang seed_phase56.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Setelah main agent memperbaiki refund_hold vs unit.deal_id, verifikasi ulang BTL/2026/0046: banner refund-hold harus muncul & override checkbox tampak untuk finlead. Setelah filter+search ditambahkan di tab Keuangan, uji kotak pencarian 'BTL/2026/0046' / 'Dewi' / 'A-01' dan filter keadaan 'diajukan' / 'disetujui'.",
+  "rca of the issue": "Cacat sisa #1: decide() menandai settlement.unit_released=True tetapi tidak me-null-kan units.deal_id. Fungsi refund_hold() menilai 'unit sudah terjual ulang' dari (reserved_by_deal | booked_by_deal | deal_id) sehingga hold dilepas walau unit sebenarnya kembali ke stok. Ini kelanjutan dari fix seed_phase50 sebelumnya — data yang di-decide sebelum fix tetap membawa deal_id lama."
+}
