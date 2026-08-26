@@ -106,3 +106,25 @@ backlog sebelumnya; utang yang diakui sendiri oleh layar Rencana Bayar):
    gate runtime yang berjalan saat startup akan merah tanpa sebab.
 3. Ambil P0 no. 1 dengan pola yang sama: reproduksi/POC → mesin → layar → gate → uji-mutasi →
    dokumentasi.
+
+
+## Fase 59 (26 Agustus 2026) — tiga utang Fase 58 dibayar
+1. **Laporan keringanan denda** untuk rapat direksi: siapa meringankan apa, berapa, kapan,
+   dengan alasan tertulis + rekap per pemberi keputusan; ekspor CSV & PDF. Dibuka dari tab
+   "Riwayat keringanan" pada panel denda (Rencana Bayar) dan tab "Keringanan Denda" di
+   Keuangan — satu komponen, satu angka.
+2. **Kandidat pembatalan karena tunggakan**: bulan tunggakan dihitung akumulatif DAN
+   berurutan sesuai SPR, ambang dari Pusat Konfigurasi. Sistem MENGUSULKAN dan menitipkan
+   tugas peninjauan kepada Manajer Keuangan (idempoten per bulan, plus job harian) —
+   pembatalan tetap diajukan Manajer Sales & diputus Manajer Keuangan (SoD Fase 56 utuh).
+3. **Laporan utang refund `2-1460`**: jatuh tempo = keputusan + `cancellation.refund_due_days`,
+   bucket umur, proyeksi kas 6 bulan, refund yang tertahan ketentuan SPR TIDAK diberi tanggal
+   karangan, dan laporannya diuji cocok dengan saldo buku besar.
+
+Guardrail: `scripts/verify_p59.py` (gate 50, 53 pemeriksaan). Status: `run_all_gates.sh`
+OVERALL PASS (50 gates); testing agent iterasi 95 → backend 17/17, frontend bersih, 0 isu.
+
+### Backlog berikutnya
+- P1: `scripts/mutasi_59.py` (uji mutasi untuk ketiga fitur Fase 59).
+- P1: denda otomatis terjadwal + pengingat WhatsApp untuk tunggakan mendekati batas.
+- P2: laporan keringanan per proyek/periode di Analitik & BI.

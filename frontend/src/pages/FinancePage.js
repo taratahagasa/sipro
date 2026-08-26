@@ -16,10 +16,13 @@ import LaborPayrollPanel from "@/components/labor/LaborPayrollPanel";
 // Fase 56C — daftar pembatalan & utang refund: yang memutuskan dan yang membayar bekerja
 // dari sisi uang, bukan dari sisi satu pembeli.
 import CancellationsPanel from "@/components/finance/CancellationsPanel";
-import { FINANCE, BANK, LABOR, P56 } from "@/constants/testIds";
+// Fase 59 — laporan keringanan denda (rapat direksi) & utang refund 2-1460 bertanggal.
+import LateFeeWaiverReport from "@/components/finance/LateFeeWaiverReport";
+import RefundDebtPanel from "@/components/finance/RefundDebtPanel";
+import { FINANCE, BANK, LABOR, P56, P59 } from "@/constants/testIds";
 
-const TABS = ["dashboard", "cashflow", "ar", "deposits", "collections", "ap", "commissions",
-  "bank", "labor", "cancellations", "reports", "config"];
+const TABS = ["dashboard", "cashflow", "ar", "deposits", "collections", "waivers", "ap",
+  "commissions", "bank", "labor", "cancellations", "refund-debt", "reports", "config"];
 
 /**
  * FinancePage (`/finance`) — satu route dengan Tabs internal; tiap panel memuat datanya
@@ -58,12 +61,18 @@ export default function FinancePage() {
           <TabsTrigger data-testid={FINANCE.tabAr} value="ar">Piutang (AR)</TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabDeposits} value="deposits">Titipan</TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabCollections} value="collections">Penagihan</TabsTrigger>
+          <TabsTrigger data-testid={P59.waiverTabReport} value="waivers">
+            Keringanan Denda
+          </TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabAp} value="ap">Utang (AP)</TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabCommissions} value="commissions">Komisi</TabsTrigger>
           <TabsTrigger data-testid={BANK.tab} value="bank">Rekonsiliasi Bank</TabsTrigger>
           <TabsTrigger data-testid={LABOR.payrollTab} value="labor">Upah Harian</TabsTrigger>
           <TabsTrigger data-testid={P56.financeTab} value="cancellations">
             Pembatalan &amp; Refund
+          </TabsTrigger>
+          <TabsTrigger data-testid={P59.refundTab} value="refund-debt">
+            Utang Refund
           </TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabReports} value="reports">Laporan</TabsTrigger>
           <TabsTrigger data-testid={FINANCE.tabConfig} value="config">Konfigurasi</TabsTrigger>
@@ -74,6 +83,7 @@ export default function FinancePage() {
         <TabsContent value="ar" className="mt-4"><ArPanel /></TabsContent>
         <TabsContent value="deposits" className="mt-4"><DepositPanel /></TabsContent>
         <TabsContent value="collections" className="mt-4"><CollectionsPanel /></TabsContent>
+        <TabsContent value="waivers" className="mt-4"><LateFeeWaiverReport /></TabsContent>
         <TabsContent value="ap" className="mt-4"><ApPanel /></TabsContent>
         <TabsContent value="commissions" className="mt-4"><CommissionsPanel /></TabsContent>
         <TabsContent value="bank" className="mt-4"><BankReconciliationTab /></TabsContent>
@@ -81,6 +91,7 @@ export default function FinancePage() {
           <LaborPayrollPanel mode="finance" />
         </TabsContent>
         <TabsContent value="cancellations" className="mt-4"><CancellationsPanel /></TabsContent>
+        <TabsContent value="refund-debt" className="mt-4"><RefundDebtPanel /></TabsContent>
         <TabsContent value="reports" className="mt-4"><ReportsPanel /></TabsContent>
         <TabsContent value="config" className="mt-4"><ConfigPanel /></TabsContent>
       </Tabs>

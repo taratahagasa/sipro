@@ -81,6 +81,10 @@ GATES=(
   # diringankan Manajer Keuangan dengan alasan tertulis yang tidak bisa dianulir bawahannya.
   # Dibuktikan bergigi oleh `scripts/mutasi_58.py` (31 mutan).
   verify_late_fee.py
+  # Fase 59 — gate ke-50: jejak keringanan denda bisa dipertanggungjawabkan di rapat
+  # direksi, tunggakan yang melewati batas SPR MENGUSULKAN (bukan membatalkan sendiri),
+  # dan utang refund 2-1460 punya tanggal + cocok dengan buku besar.
+  verify_p59.py
 )
 
 fail=0

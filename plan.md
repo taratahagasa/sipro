@@ -96,12 +96,30 @@ testing agent iterasi 94: backend 11/11, UI panel denda + dialog keringanan + ka
 
 ---
 
+## 3c) Fase 59 — tiga utang Fase 58 dibayar (SELESAI)
+
+| Fitur | Isi | Bukti |
+|---|---|---|
+| **Laporan keringanan denda** | `late_fee_report.py` (siapa/apa/berapa/kapan/alasan + rekap per pemberi keputusan), tab **Riwayat keringanan** di panel denda Rencana Bayar & tab **Keringanan Denda** di Keuangan (satu komponen), ekspor **CSV + PDF** | gate 50 K1-K5/K18-K20b/D1-D3; alur nyata: denda A-02 Rp 4.760.000 diringankan finlead@ → muncul di laporan |
+| **Pembatalan karena tunggakan** | `arrears_engine.py`: bulan tunggakan **akumulatif DAN berurutan** (SPR), ambang dari Pusat Konfigurasi, panel kandidat di tab Pembatalan & Refund, `sweep()` menitipkan **TUGAS** ke Manajer Keuangan (idempoten/bulan) + job harian `scheduler_p59` | gate 50 K6-K10c/D4-D7; mesin TIDAK punya jalan membatalkan sendiri (SoD Fase 56 utuh) |
+| **Laporan utang refund `2-1460`** | `refund_debt.py`: jatuh tempo = keputusan + `cancellation.refund_due_days` (30), bucket umur, proyeksi kas 6 bulan, yang **tertahan SPR tidak diberi tanggal karangan**, dan uji cocok dengan **saldo buku besar** | gate 50 K11-K15/D8-D10; proyeksi + belum-terjadwal = seluruh kewajiban |
+
+Guardrail baru: **`scripts/verify_p59.py` (gate 50, 53 pemeriksaan)** — masuk `run_all_gates.sh`.
+Kriteria selesai: `run_all_gates.sh` → **OVERALL PASS (50 gates)**; testing agent iterasi 95
+17/17 backend, 3 panel + 14 tab Keuangan bersih, 0 isu.
+
+---
+
 ## 4) Tugas berikutnya (untuk sesi lanjutan)
 
 1. **Denda otomatis terjadwal** (opsional per organisasi): sekarang denda ditagihkan lewat
    tombol; scheduler harian bisa menerbitkannya + pengingat WhatsApp (`payment.late.auto_apply`
    belum ada — sengaja, karena menagih otomatis adalah keputusan bisnis).
-2. **Laporan denda & keringanan** (siapa meringankan apa, berapa, kapan) untuk rapat direksi.
-3. **Pembatalan sepihak karena tunggakan** (`payment.staged.arrears_months_to_cancel` = 2
-   bulan) — pasalnya sudah tercetak, mesinnya belum menyambung ke Fase 56.
-4. Laporan **utang refund** (`2-1460`) tersendiri + arus kas proyeksi.
+2. ~~Laporan denda & keringanan~~ — **SELESAI Fase 59**.
+3. ~~Pembatalan sepihak karena tunggakan~~ — **SELESAI Fase 59** (tahap usulan; pembatalan
+   otomatis sengaja TIDAK dibuat).
+4. ~~Laporan utang refund (`2-1460`)~~ — **SELESAI Fase 59**.
+5. **Mutasi Fase 59** (`scripts/mutasi_59.py`) belum ada: gate 50 sudah menjaga ketiga fitur,
+   tetapi ketangguhannya belum diuji dengan mutan seperti fase-fase sebelumnya.
+6. **Pengingat WhatsApp untuk tunggakan yang mendekati batas** (H-30 sebelum kandidat) —
+   sekarang pembeli baru tahu saat tugas peninjauan sudah terbit.

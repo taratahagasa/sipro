@@ -743,6 +743,7 @@ def start_scheduler():
     import scheduler_core as sched_core
     import scheduler_p45 as sched_p45
     import scheduler_p51 as sched_p51
+    import scheduler_p59 as sched_p59
     sched_core.register(_scheduler)
     sched_p45.register(_scheduler)
     sched_p51.register(_scheduler)

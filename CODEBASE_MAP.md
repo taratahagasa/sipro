@@ -1571,3 +1571,19 @@ gate 47 (K10b2, K10b3, D14b) + mutan M14/M47/M48.
 - `backend/reference_groups.py` — `GROUPS` dasar + `_o`. `reference.py` memuatnya lalu menambah grup per-fase.
 - Gate/mutasi yang membaca matriks: `verify_late_fee.py` (rbac.py + rbac_matrix.py), `mutasi_45/52/58`.
 - Pemulihan lingkungan (repo tanpa `.env`/`node_modules`): `backend/.env` butuh `JWT_SECRET`, `DEFAULT_ORG_ID`, `PORTAL_MASTER_OTP`; pasang `reportlab`, `APScheduler`, `tzlocal`; `yarn install` di `frontend/`.
+
+## Fase 59 — Laporan keringanan denda · Kandidat tunggakan · Utang refund 2-1460
+- **Backend:** `late_fee_report.py` (laporan keringanan + dataset PDF), `arrears_engine.py`
+  (`months_in_arrears`/`candidates`/`sweep` — MENGUSULKAN, tidak pernah membatalkan),
+  `refund_debt.py` (jatuh tempo + bucket umur + proyeksi kas + rekonsiliasi saldo GL),
+  `routers/p59_router.py`, `scheduler_p59.py` (cron 02:00 UTC, hanya menerbitkan tugas),
+  `reference_p59.py` (`arrears_stage`, `refund_due_state`, `refund_age_bucket`),
+  kunci baru `cancellation.refund_due_days` (30).
+- **Endpoint:** `GET /api/finance/late-fee-waivers` (+`/pdf`), `GET /api/finance/arrears/candidates`,
+  `POST /api/finance/arrears/sweep` (`cancellation:approve` = Manajer Keuangan),
+  `GET /api/finance/refund-debt` (+`/pdf`).
+- **Frontend:** `components/finance/{LateFeeWaiverReport,ArrearsCandidatesPanel,RefundDebtPanel}.js`;
+  tab **Riwayat keringanan** di `LateFeePanel`, tab **Keringanan Denda** & **Utang Refund** di
+  `FinancePage`, panel kandidat di atas `CancellationsPanel`; testIds `constants/testIds/p59.js`.
+- **Gate:** `scripts/verify_p59.py` (gate 50, 53 pemeriksaan) di `run_all_gates.sh`.
+- **Status:** gates 50/50 PASS; testing agent iterasi 95 backend 17/17, frontend bersih.

@@ -173,6 +173,14 @@ DEFAULTS: dict = {d["key"]: d for d in [
        "Refund menunggu unit terjual kembali",
        "Pengembalian dana dilakukan setelah unit dibatalkan terjual ke pihak lain.",
        sensitive=True, src="DOC"),
+    # Fase 59: utang refund yang sudah lahir di buku besar (2-1460) TIDAK punya tanggal
+    # sampai fase ini — kewajiban tanpa tanggal tidak bisa dipakai merencanakan kas. Ambang
+    # ini yang mengubahnya menjadi jatuh tempo yang bisa dilaporkan & diproyeksikan.
+    _d("cancellation.refund_due_days", 30, "int", "pembatalan",
+       "Batas pembayaran refund setelah keputusan (hari)",
+       "Hari kalender sejak keputusan pembatalan disetujui. Refund yang tertahan ketentuan "
+       "SPR (menunggu unit terjual kembali) sengaja tidak diberi tanggal.",
+       sensitive=True, minimum=1, maximum=365, src="CFG"),
     # ============ legal ============
     _d("legal.shgb_months_after_ajb", 6, "int", "legal", "Sertifikat (SHGB) diserahkan (bulan)",
        "Perkiraan waktu penyerahan sertifikat sejak AJB/PPJB notaris.", src="DOC"),

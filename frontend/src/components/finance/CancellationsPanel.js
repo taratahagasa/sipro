@@ -17,6 +17,7 @@ import { formatDateTimeWIB } from "@/utils/formatters";
 import { useReference } from "@/context/ReferenceContext";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ArrearsCandidatesPanel from "@/components/finance/ArrearsCandidatesPanel";
 import { P56 } from "@/constants/testIds";
 
 /**
@@ -84,6 +85,11 @@ export default function CancellationsPanel() {
 
   return (
     <div data-testid={P56.financePanel} className="space-y-4">
+      {/* Fase 59: pasal "tunggakan 2 bulan boleh dibatalkan" akhirnya menunjuk SIAPA yang
+          sudah melewatinya. Ia MENGUSULKAN saja — pembatalan tetap diajukan Manajer Sales
+          dan diputus Manajer Keuangan lewat alur di bawah. */}
+      <ArrearsCandidatesPanel />
+
       <div className="grid gap-3 sm:grid-cols-3">
         <MetricCard label="Menunggu keputusan" value={counts.diajukan || 0}
           hint="Diajukan Manajer Sales, diputus Manajer Keuangan" />

@@ -1,0 +1,28 @@
+{
+  "summary": "Iterasi 95 — verifikasi Fase 59 (tiga fitur baru). Backend 17/17 pytest LULUS (test_p59.py) mencakup: (a) Laporan keringanan denda GET /api/finance/late-fee-waivers untuk finlead@/finance@ (200, struktur rows/by_actor/by_month/totals/filter/note utuh), lingkup sales@ dipersempit server-side (filter.scoped_to='sales@sipro.co.id'), filter tanggal benar-benar menyaring (2099 -> 0 baris), ekspor PDF valid %PDF-header; (b) Kandidat tunggakan GET /api/finance/arrears/candidates 200 dengan stage/rule_note/blocks/months_in_arrears per baris, SoD dipaksa: finance@ dan sales@ 403 di POST /api/finance/arrears/sweep, finlead@ 200 dan sweep IDEMPOTEN (sweep ke-2 di bulan yang sama menghasilkan 0 created); (c) Laporan Utang Refund GET /api/finance/refund-debt 200 dengan buckets 0-30..>90, projection 6 periode, ledger.account_code='2-1460' + matched, sales@ ditolak 403, PDF valid. Frontend: ketiga panel dirender dengan testId sesuai konstanta p59.js. Di /finance?tab=waivers -> late-fee-waiver-report + waiver-date-from/to + waiver-export-csv/pdf + waiver-summary + waiver-empty (data demo kosong -> kalimat 'ini kabar baik, bukan data yang hilang' — BENAR). Di /finance?tab=refund-debt -> refund-debt-panel/summary/buckets/projection/ledger/export-csv/pdf + banner 'Cocok dengan buku besar' hijau (0 vs 0). Di /finance?tab=cancellations panel arrears paling atas menampilkan 2 baris kandidat pada tahap 'perhatian' (1 bulan; ambang 2), rule_note & block_note hadir, TIDAK ADA tombol batal di panel ini (SoD terjaga), tombol Buat tugas peninjauan (arrears-sweep-btn) sengaja HILANG karena count_candidate=0 pada data demo — kode UI-nya (ArrearsCandidatesPanel.js:85) hanya menampilkan tombol saat ada kandidat_batal, konsisten dengan aturan. Regresi 14 tab Keuangan (dashboard, cashflow, ar, deposits, collections, waivers, ap, commissions, bank, labor, cancellations, refund-debt, reports, config) semua termuat tanpa blank/error selectors. RBAC frontend juga jujur: sales@ mengakses /finance?tab=refund-debt melihat kotak merah 'Akses ditolak: tidak memiliki izin view pada finance'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_p59.py",
+    "/app/test_reports/pytest/it95_p59.xml",
+    "/app/test_reports/it95_waivers.png",
+    "/app/test_reports/it95_refund_debt.png",
+    "/app/test_reports/it95_arrears_finlead.png",
+    "/app/test_reports/it95_sales_refund.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "p59_router.py sengaja tidak diletakkan di bawah /finance/late-fees atau /cancellations agar tidak tertelan sebagai path param — keputusan yang benar dan didokumentasikan.",
+    "arrears_engine.months_in_arrears memakai max(by_terms, by_days) — konsisten dengan klausul SPR 'berurutan maupun akumulatif'.",
+    "refund_debt.report menyandingkan gl_balance 2-1460 dengan worksheet dan menampilkan selisih apa adanya (matched=true saat sama) — laporan yang bisa memeriksa dirinya sendiri.",
+    "sweep() memakai source_event=arrears_review:{key}:{period}:{email} untuk idempotensi — terbukti hijau: sweep ke-2 = 0 tugas baru.",
+    "late_fee_report.waivers memfilter server-side lewat assigned_to bila own_email diset (dipanggil dari _own(user) berdasarkan is_scoped_sales) — bukan disaring di peramban."
+  ],
+  "updated_files": ["/app/backend/tests/test_p59.py"],
+  "success_rate": {"backend": "100% (17/17 pytest)", "frontend": "100% (3 panel testId lengkap, 14 tab regresi bersih, 2 alur SoD 403 benar)"},
+  "test_credentials": "finance@/finlead@/sales@/owner@sipro.co.id sandi Sipro#2026",
+  "seed_data_creation": "Tidak menambah data. Data demo saat ini: 0 keringanan denda, 0 utang refund belum dibayar, 2 kandidat tunggakan tahap 'perhatian' (A-01 25 hari, A-02 42 hari) — belum ada yang menembus ambang 2 bulan, jadi tombol 'Buat tugas peninjauan' sengaja belum muncul. Untuk menguji sweep membuat tugas nyata, perlu data pembeli yang menunggak >=60 hari; alternatifnya turunkan payment.staged.arrears_months_to_cancel ke 1 di Pusat Konfigurasi (tidak dilakukan agar tidak mengotori data demo).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fase 59 HIJAU. Alur end-to-end waiver->laporan tidak diuji dengan menambah data (data demo A-01 sudah pernah di-charge denda pada iterasi 94; keringanannya tidak diuji live karena akan mencemari data untuk auditor). Alur refund end-to-end (menyetujui BTL/2026/0001) juga tidak dijalankan agar iterasi berikutnya masih punya kasus 'menunggu keputusan' untuk demonstrasi. Bila E1 ingin membuktikan baris muncul di laporan, jalankan skenario buatan pada sandbox terpisah — jangan pada seed demo yang sedang dipakai gate."
+}

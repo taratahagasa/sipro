@@ -8,11 +8,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MoneyText from "@/components/patterns/MoneyText";
+// Fase 59 — jejak keringanan tidak boleh hanya bisa dibaca satu-satu: tab kedua di panel
+// ini adalah laporan yang sama yang dipakai rapat direksi (satu komponen, satu angka).
+import LateFeeWaiverReport from "@/components/finance/LateFeeWaiverReport";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/apiClient";
 import { formatDateWIB } from "@/utils/formatters";
-import { P58 } from "@/constants/testIds";
+import { P58, P59 } from "@/constants/testIds";
 
 /**
  * LateFeePanel — TOLERANSI KETERLAMBATAN & DENDA BERJURNAL (Fase 58).
@@ -114,6 +118,19 @@ export default function LateFeePanel({ dealId, unitCode, onChanged }) {
 
   return (
     <div data-testid={P58.panel} className="space-y-2.5 rounded-xl border bg-card p-3">
+      <Tabs defaultValue="keadaan">
+        <TabsList>
+          <TabsTrigger data-testid={P59.waiverTabState} value="keadaan">
+            Keadaan termin &amp; denda
+          </TabsTrigger>
+          <TabsTrigger data-testid={P59.waiverTabReport} value="keringanan">
+            Riwayat keringanan
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="keringanan" className="mt-3">
+          <LateFeeWaiverReport dealId={dealId} unitCode={unitCode} />
+        </TabsContent>
+        <TabsContent value="keadaan" className="mt-3 space-y-2.5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="flex items-center gap-1.5 font-heading text-[13px] font-semibold">
           <Clock className="h-4 w-4 text-amber-600" />
@@ -217,6 +234,9 @@ export default function LateFeePanel({ dealId, unitCode, onChanged }) {
           ) : null}
         </div>
       ) : null}
+
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={!!waive} onOpenChange={(v) => { if (!v) { setWaive(null); setReason(""); } }}>
         <DialogContent data-testid={P58.waiveDialog} className="max-w-lg bg-background">
