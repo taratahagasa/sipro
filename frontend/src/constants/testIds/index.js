@@ -14,6 +14,10 @@
 export * from './offline';
 // Fase 59 — laporan keringanan denda, kandidat tunggakan, laporan utang refund
 export * from './p59';
+// Fase 60 — konfigurasi tampilan dokumen (kop/footer/tanda tangan/baris biaya)
+export * from './p60';
+// Fase 61 — cetak SPK subkontraktor & PO pengadaan
+export * from './p61';
 export * from './auth';
 export * from './home';
 export * from './sales';

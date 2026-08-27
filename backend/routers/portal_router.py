@@ -465,9 +465,14 @@ async def document_pdf(doc_id: str, request: Request):
     doc = await db.documents.find_one({"id": doc_id, "org_id": org}, {"_id": 0})
     if not doc or doc.get("deal_id") not in ids:
         raise HTTPException(status_code=404, detail="Dokumen tidak ditemukan")
+    # Dokumen yang DIUNDUH PEMBELI wajib memakai kop/footer yang sama dengan salinan staf —
+    # kalau tidak, pembeli menerima teks polos yang tak terlihat resmi.
+    import doc_layout as dl
+    layout = await dl.get_layout(org, doc.get("template_code") or "SPR_CASH")
     pdf = build_document_pdf(title=doc.get("title", "Dokumen"), doc_number=doc.get("doc_number"),
                              content=doc.get("content", ""), signatures=doc.get("signatures"),
-                             org_name=ORG_NAME)
+                             org_name=ORG_NAME, layout=layout,
+                             images=await dl.images(org, layout))
     filename = f"{(doc.get('doc_number') or 'dokumen').replace('/', '-')}.pdf"
     return StreamingResponse(io.BytesIO(pdf), media_type="application/pdf",
                              headers={"Content-Disposition": f'inline; filename="{filename}"'})
@@ -711,9 +716,12 @@ async def portal_receipt_pdf(rid: str, pu: dict = Depends(get_portal_user)):
         "",
         "Kwitansi ini sah sebagai bukti penerimaan pembayaran dan dicetak dari sistem.",
     ])
+    import doc_layout as dl
+    layout = await dl.get_layout(pu.get("org_id", ORG_ID), "KWITANSI")
     pdf = build_document_pdf(title="Kwitansi Penerimaan Pembayaran",
                              doc_number=doc.get("receipt_no") or doc.get("id"),
-                             content=isi, signatures=None, org_name=ORG_NAME)
+                             content=isi, signatures=None, org_name=ORG_NAME, layout=layout,
+                             images=await dl.images(pu.get("org_id", ORG_ID), layout))
     name = str(doc.get("receipt_no") or "kwitansi").replace("/", "-")
     return Response(content=pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'inline; filename="{name}.pdf"'})

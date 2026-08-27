@@ -96,6 +96,7 @@ export default function CostsDialog({ contract, open, onOpenChange, onSaved }) {
               <Label htmlFor={`cost-${f.key}`}>{f.label}</Label>
               <div className="flex items-center gap-2">
                 <Input id={`cost-${f.key}`} inputMode="numeric" className="bg-background"
+                  aria-label={f.label}
                   placeholder={costs[f.key] == null ? "belum diisi" : ""}
                   value={form[f.key]}
                   onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))} />

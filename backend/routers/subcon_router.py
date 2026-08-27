@@ -5,8 +5,9 @@ to a project with a contract value + retention. SPK are the contractual basis fo
 subcon Purchase Orders / bills in the procurement pillar. Read is org-scoped;
 project-scoped roles (PM/site) only see SPK for their assigned projects.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+import docgen_p61 as p61
 import opname as op
 import sequences as seq
 from denorm import cascade_master_change
@@ -179,6 +180,17 @@ async def get_spk(sid: str, user: dict = Depends(require_permission("subcon", "v
     rows = await op.scope_rows(doc["org_id"], sid)
     return {"data": serialize_doc(doc), "purchase_orders": serialize_doc(pos),
             "scope_summary": op.summarize(rows)}
+
+
+@router.get("/spk/{sid}/pdf")
+async def spk_pdf(sid: str, user: dict = Depends(require_permission("subcon", "view"))):
+    """Cetak SPK berkop (Fase 61) — surat yang ditandatangani subkontraktor sebelum bekerja."""
+    doc = await _get_spk(sid, user)
+    pdf = await p61.spk_pdf(doc["org_id"], doc,
+                            {"name": user.get("name"), "role": user.get("role")})
+    nama = str(doc.get("spk_number") or "spk").replace("/", "-")
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{nama}.pdf"'})
 
 
 @router.put("/spk/{sid}")

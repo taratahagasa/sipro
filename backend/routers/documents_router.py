@@ -171,9 +171,17 @@ async def sign_document(doc_id: str, payload: DocumentSign,
 @router.get("/{doc_id}/pdf")
 async def document_pdf(doc_id: str, user: dict = Depends(require_permission("documents", "view"))):
     d = await _get_doc_scoped(doc_id, user)
+    # Fase 60: tampilan (kop, footer, tanda tangan, baris biaya) dibaca dari Konfigurasi
+    # Dokumen milik organisasi — bukan lagi teks polos tanpa identitas.
+    import doc_layout as dl
+    org = user.get("org_id", ORG_ID)
+    layout = await dl.get_layout(org, d.get("template_code") or "SPR_CASH")
+    snap = d.get("context_snapshot") or {}
+    layout.setdefault("options", {}).setdefault("doc_date", snap.get("document_date"))
     pdf = build_document_pdf(title=d.get("title", "Dokumen"), doc_number=d.get("doc_number"),
                              content=d.get("content", ""), signatures=d.get("signatures"),
-                             org_name=ORG_NAME)
+                             org_name=ORG_NAME, layout=layout,
+                             images=await dl.images(org, layout))
     filename = f"{d.get('doc_number', 'dokumen').replace('/', '-')}.pdf"
     return StreamingResponse(io.BytesIO(pdf), media_type="application/pdf",
                              headers={"Content-Disposition": f'inline; filename="{filename}"'})

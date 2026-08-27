@@ -10,8 +10,9 @@ anti-fraud review task for finance. Controls:
   * Audit trail: audit_log + activities + events on every state change.
 Material-type GRNs also post an 'in' material_txn so stock stays in sync.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+import docgen_p61 as p61
 import sequences as seq
 import procurement_extra as pe
 import vendor_engine as ve
@@ -158,6 +159,17 @@ async def get_po(pid: str, user: dict = Depends(require_permission("procurement"
     grns = await db.grns.find({"org_id": org, "po_id": pid}, {"_id": 0}).sort("created_at", -1).to_list(200)
     bills = await db.ap_invoices.find({"org_id": org, "po_id": pid}, {"_id": 0}).sort("created_at", -1).to_list(200)
     return {"data": serialize_doc(doc), "grns": serialize_doc(grns), "bills": serialize_doc(bills)}
+
+
+@router.get("/pos/{pid}/pdf")
+async def po_pdf(pid: str, user: dict = Depends(require_permission("procurement", "view"))):
+    """Cetak PO berkop (Fase 61) — dasar vendor mengirim barang & menagih."""
+    doc = await _get_po(pid, user)
+    pdf = await p61.po_pdf(doc["org_id"], doc,
+                           {"name": user.get("name"), "role": user.get("role")})
+    nama = str(doc.get("po_number") or "po").replace("/", "-")
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{nama}.pdf"'})
 
 
 @router.post("/pos/{pid}/approve")

@@ -9,12 +9,25 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 
 
 def build_document_pdf(*, title: str, doc_number: str, content: str,
-                       signatures=None, org_name: str = "PT SIPRO Land") -> bytes:
+                       signatures=None, org_name: str = "PT SIPRO Land",
+                       layout: dict = None, images: dict = None, meta=None,
+                       money_rows=None, clauses=None, note: str = "") -> bytes:
     """Render a SIPRO document to a PDF byte string.
 
     content is plain text with lines; lines shaped 'Label : Value' render as a table
     for a clean, formal look. signatures is a list of {role, name, signed_at}.
     """
+    if layout:
+        # Fase 60: kop surat, footer identitas, watermark, dan kolom tanda tangan yang bisa
+        # dikonfigurasi. Dokumen tanpa layout tetap memakai jalur lama (kompatibel).
+        import pdf_layout as _pl
+        import doc_layout as _dl
+        sigs = _dl.signatures_for(layout) if not signatures else [
+            {"title": (s.get("role") or "").title(), "name": s.get("name"),
+             "position": None, "show_stamp": False} for s in signatures]
+        return _pl.render_letter(layout, images or {}, title=title, doc_number=doc_number,
+                                 content=content, meta=meta, money_rows=money_rows,
+                                 clauses=clauses, note=note, signatures_override=sigs)
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4, topMargin=22 * mm, bottomMargin=20 * mm,
@@ -95,8 +108,14 @@ _REPORT_NOTE = "Angka worksheet-level (belum GL penuh / e-Faktur). Dihasilkan ot
 
 
 def build_table_pdf(*, title: str, subtitle: str = "", columns, rows,
-                    total_row=None, org_name: str = "PT SIPRO Land") -> bytes:
+                    total_row=None, org_name: str = "PT SIPRO Land",
+                    layout: dict = None, images: dict = None) -> bytes:
     """Render a tabular finance report to PDF bytes (header + optional total row)."""
+    if layout:
+        import pdf_layout as _pl
+        return _pl.render_table(layout, images or {}, title=title, subtitle=subtitle,
+                                columns=columns, rows=rows, total_row=total_row,
+                                note=_REPORT_NOTE)
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4, topMargin=20 * mm, bottomMargin=18 * mm,

@@ -1,0 +1,23 @@
+{
+  "summary": "Fase 61 SIPRO — pengujian UI frontend saja. Login superadmin OK. Tombol 'Cetak SPK (PDF)' (data-testid=spk-print-pdf) di SPKDetailSheet berhasil mengunduh PDF valid (%PDF header, 3712 bytes) tanpa toast error. Tombol 'Cetak PO (PDF)' (data-testid=po-print-pdf) di PODetailSheet berhasil mengunduh PDF valid (3538 bytes) tanpa toast error. Regresi tombol lain (po-cancel-button, grn-receive-button, bill-create-button, spk-status-select, spk-status-submit) tetap ada dan berfungsi normal, tidak tertutup/tergeser. Layout mobile 390px rapi — tombol menggunakan flex-wrap dan tidak tumpang tindih. Regresi Fase 60: /admin/master-data → Template Dokumen → Tampilan & kop surat merender pratinjau; dropdown doc-layout-target berisi opsi 'Surat Perintah Kerja subkontraktor — SPK' dan 'Purchase Order pengadaan — PO'; memilih keduanya merender pratinjau tanpa doc-layout-preview-error. Semua kriteria review request TERPENUHI.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "PO/SPK detail sheet", "issues": ["Peringatan a11y radix pre-existing: 'DialogContent requires a DialogTitle' — bukan bug Fase 61, sudah ada sebelumnya, dapat diperbaiki dengan membungkus SheetTitle/DialogTitle dengan VisuallyHidden bila diperlukan"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PrintDocButton membuat <a download> DAN window.open — di beberapa browser bisa memicu dua unduhan/tab. Saat ini bekerja baik pada Chromium, tapi pertimbangkan single-path (hanya window.open dengan Content-Disposition attachment dari backend) untuk konsistensi."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "superadmin@sipro.co.id / Sipro#2026",
+  "seed_data_creation": "tidak ada — memakai seed demo (SPK_DEMO51_CAIR, PO/2026/0002)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fase 61 lulus. Tombol cetak berada di SPKDetailSheet (subcon page → tab SPK → klik baris) dan PODetailSheet (procurement page → klik baris po-row). Kredensial superadmin cukup. Perhatikan: nav bar menampilkan 'Subkontraktor & SPK' → route /subcon, tab SPK data-testid='subcon-tab-spk'; 'Pengadaan & Vendor' → /procurement, tab PO default."
+}

@@ -1,0 +1,25 @@
+{
+  "summary": "Iterasi 96 - verifikasi UI Fase 60 (Konfigurasi Lanjutan Dokumen). Semua alur inti panel DocLayoutPanel bekerja rapi di /admin/master-data -> tab 'Template Dokumen' -> sub-tab 'Tampilan & kop surat'. (1) Panel doc-layout-panel tampil, pratinjau <iframe data-testid=doc-layout-preview> ter-load otomatis dengan src blob: PDF, TIDAK ada doc-layout-preview-error. (2) Mengubah doc-layout-company-name menjadi 'PT SIPRO Land - Uji Iterasi 96' + memilih tagline via ReferenceSelect doc-layout-tagline (9 opsi kamus SSOT termuat, dipilih 'Pengembang Properti') membuat tombol doc-layout-save aktif (disabled null) dan pratinjau ter-render ulang (src blob berubah). (3) Klik doc-layout-save memunculkan toast 'Konfigurasi dokumen disimpan...'; reload halaman -> nilai company_name tetap tersimpan; tombol doc-layout-reset (Bawaan) mengembalikan 'PT SIPRO Land' + toast 'Dikembalikan ke bawaan. Dokumen yang sudah terbit tidak berubah.'. (4) Tab doc-layout-tab-rows: 13 checkbox doc-layout-row-visible + 13 tombol doc-layout-row-up berjalan, doc-layout-row-add-manual menambah baris manual, doc-layout-row-amount menerima 1234567 - preview berubah. (5) Tab doc-layout-tab-sign: doc-layout-sign-add 2->3 item, doc-layout-sign-title/name/position dapat diisi, preview berubah; doc-layout-sign-remove kembali 3->2. (6) Dropdown doc-layout-target berisi 12 dokumen termasuk 'Berita Acara Serah Terima unit' (BAST) dan 'Laporan tabel (keuangan, denda, refund, mingguan)' (LAPORAN); memilih LAPORAN merender ulang preview (src blob) tanpa error. Catatan: label 'BAST' tidak muncul sebagai teks, dokumen ditulis 'Berita Acara Serah Terima unit' - tidak dianggap bug karena kode dokumen tetap tersedia via mesin cetak yang sama. (7) doc-layout-preview-download menghasilkan PDF 2387 byte dengan header %PDF-1.4 valid. (8) RBAC sales@sipro.co.id: setelah login, akses /admin/master-data me-redirect ke '/' (tidak memiliki view master data); backend API tetap tegas: PUT /api/doc-layouts/__default__ -> 403 dan POST /api/doc-layouts/__default__/preview -> 403. doc-layout-denied tidak dirender karena panel tidak sempat dimuat (redirect halaman terjadi lebih dulu) - ini pengamanan yang lebih kuat, bukan cacat. (9) Regresi cepat: GET /api/documents/{id}/pdf pada dokumen deal pertama (id 2ba43dad-506d-48a7-...) mengembalikan 200 + %PDF-1.4 (2378 byte) - jalur PDF sungguhan masih hidup dan sekarang memakai layout yang sama. Tidak ada page error / console error selama pengujian.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/test_reports/it96_master.png",
+    "/app/test_reports/it96_layout_after.png",
+    "/app/test_reports/it96_sales_denied.png",
+    "/app/test_reports/it96_layout_sample.pdf"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DocLayoutPanel.js: pratinjau memakai debounce 700ms yang tepat - satu render per keheningan ketikan, bukan per keystroke. blob URL diciptakan ulang setiap render; TIDAK di-revokeObjectURL, sehingga sesi panjang bisa menahan memori browser. Non-blocking, tapi bisa ditambah URL.revokeObjectURL(preview.url) di cleanup useEffect.",
+    "Untuk peran tanpa view 'documents'/'settings', halaman /admin/master-data me-redirect keluar sebelum panel dirender, jadi data-testid doc-layout-denied hanya muncul untuk peran yang boleh MELIHAT master-data tetapi tidak boleh MENGUBAH pengaturan (mis. jika ada peran hybrid). Perilaku end-to-end aman karena backend memaksa 403 pada PUT/preview.",
+    "BrandForm.js ImageField menyematkan token JWT pada querystring gambar (?auth=<token>) - berfungsi tetapi menaruh JWT di URL kurang ideal untuk logging server. Bukan bug fungsional.",
+    "Label dokumen 'BAST' tidak ditampilkan dalam daftar target (hanya 'Berita Acara Serah Terima unit'). Bila QA/tester mencari 'BAST' via substring akan lolos, tapi pengguna baru mungkin kesulitan; pertimbangkan menambahkan sufiks kode ' - BAST' di label seperti yang sudah dilakukan untuk SPR."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (RBAC 403 PUT+preview terverifikasi, dokumen PDF sungguhan 200 %PDF-1.4)", "frontend": "100% (semua data-testid P60 kritis terangkai: panel/preview/tab brand/rows/sign, save+reset, target BAST+LAPORAN, download PDF)"},
+  "test_credentials": "superadmin@sipro.co.id / sales@sipro.co.id, sandi Sipro#2026",
+  "seed_data_creation": "Tidak. Konfigurasi kembali ke bawaan setelah pengujian via tombol Bawaan (delete override).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fase 60 UI HIJAU. Jika perlu memvalidasi jalur portal pembeli PDF (yang menurut permintaan sekarang juga memakai layout), gunakan OTP master 000000 pada /portal login + nomor pelanggan seed. Tidak diuji live pada iterasi ini karena backend gate verify_p60.py sudah lulus 38 pemeriksaan dan alur PDF /api/documents/{id}/pdf sudah dikonfirmasi 200 + %PDF valid via superadmin - keduanya dirender oleh pdf_layout.py yang sama."
+}

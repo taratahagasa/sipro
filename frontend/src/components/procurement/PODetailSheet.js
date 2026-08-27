@@ -11,11 +11,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import StatusPill from "@/components/patterns/StatusPill";
+import PrintDocButton from "@/components/patterns/PrintDocButton";
 import { LoadingCards } from "@/components/patterns/StateViews";
 import { useAuth } from "@/context/AuthContext";
 import { formatIDR } from "@/utils/formatters";
 import api from "@/services/apiClient";
-import { PROCUREMENT } from "@/constants/testIds";
+import { PROCUREMENT, P61 } from "@/constants/testIds";
 
 const APPROVE = ["owner", "super_admin", "finance"];
 const CREATE = ["owner", "super_admin", "project_manager", "site_engineer", "finance"];
@@ -121,6 +122,8 @@ export default function PODetailSheet({ poId, open, onOpenChange, onChanged }) {
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
+                <PrintDocButton url={`/procurement/pos/${po.id}/pdf`} testId={P61.poPdf}
+                  filename={po.po_number} label="Cetak PO (PDF)" />
                 {po.status === "draft" && APPROVE.includes(role) ? (
                   <Button data-testid={PROCUREMENT.poApprove} disabled={busy} onClick={doApprove}>
                     <CheckCircle2 className="mr-1.5 h-4 w-4" /> Setujui

@@ -179,8 +179,8 @@ async def snapshots(code: str = None, limit: int = 60,
 async def rebuild_snapshots(date: str = None,
                             user: dict = Depends(require_permission("analytics", "manage"))):
     """Hitung ulang snapshot (INV-14: snapshot tidak boleh jadi kebenaran yang tak bisa diuji)."""
-    out = await eng.write_snapshot(org_id=user.get("org_id", ORG_ID), date=date,
-                                   actor=user.get("email"))
+    out = await eng.rebuild_snapshots(org_id=user.get("org_id", ORG_ID), date=date,
+                                      actor=user.get("email"))
     await audit_log(user, "rebuild", "metric_snapshots", out["date"], {"metrics": out["metrics"]})
     return {"data": out}
 

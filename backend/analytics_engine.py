@@ -136,6 +136,24 @@ async def write_snapshot(*, org_id: str = ORG_ID, date: str = None, codes: list 
     return {"date": day, "metrics": written, "codes": sorted(wanted)}
 
 
+async def rebuild_snapshots(*, org_id: str = ORG_ID, date: str = None,
+                            actor: str = "scheduler") -> dict:
+    """Hitung ulang snapshot. Tanpa `date` = PERBAIKI SELURUH riwayat yang tersimpan.
+
+    Snapshot bukan kebenaran kedua: kalau satu baris lama nilainya menyimpang (rusak,
+    diedit langsung di database, atau ditulis oleh versi rumus yang lebih tua), rebuild
+    harus mengembalikannya ke hitungan langsung — bukan hanya menimpa baris hari ini.
+    """
+    today = datetime.now(timezone.utc).date().isoformat()
+    if date:
+        return await write_snapshot(org_id=org_id, date=date, actor=actor)
+    days = await db.metric_snapshots.distinct("date", {"org_id": org_id})
+    out = await write_snapshot(org_id=org_id, date=today, actor=actor)
+    for day in sorted({d for d in days if d and d != today}):
+        await write_snapshot(org_id=org_id, date=day, actor=actor)
+    return out
+
+
 async def snapshot_series(code: str, *, org_id: str = ORG_ID, limit: int = 60) -> list:
     """Deret snapshot satu metrik (untuk sparkline tren) — selalu bisa dihitung ulang."""
     rows = await db.metric_snapshots.find({"org_id": org_id, "code": code}, {"_id": 0}) \

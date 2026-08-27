@@ -11,8 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import EmptyState from "@/components/patterns/EmptyState";
 import { LoadingCards, ErrorState } from "@/components/patterns/StateViews";
 import ConfirmDialog from "@/components/patterns/ConfirmDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Fase 60 — tampilan dokumen (kop, footer, tanda tangan, baris biaya) + pratinjau.
+import DocLayoutPanel from "@/components/master/DocLayoutPanel";
 import api from "@/services/apiClient";
-import { MASTER } from "@/constants/testIds";
+import { MASTER, P60 } from "@/constants/testIds";
 
 const EMPTY = { code: "", name: "", content: "" };
 
@@ -117,7 +120,15 @@ export default function DocTemplatesPanel() {
   if (error) return <ErrorState message={error} onRetry={load} />;
 
   return (
-    <div className="space-y-4">
+    <Tabs defaultValue="isi" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="isi">Isi template (naskah)</TabsTrigger>
+        <TabsTrigger data-testid={P60.tabPage} value="tampilan">
+          Tampilan &amp; kop surat
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="tampilan"><DocLayoutPanel /></TabsContent>
+      <TabsContent value="isi" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           Template untuk PPJB, Surat Pesanan, AJB, BAST, dll. Dipakai saat menerbitkan dokumen deal.
@@ -173,6 +184,7 @@ export default function DocTemplatesPanel() {
         description="Template yang diarsipkan tidak lagi bisa dipilih saat menerbitkan dokumen baru, tetapi dokumen yang sudah terbit tetap utuh."
         confirmLabel="Ya, arsipkan" busy={archiveBusy} onConfirm={archive}
         testId="doc-archive-confirm" />
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }

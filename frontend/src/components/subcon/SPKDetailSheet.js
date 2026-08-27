@@ -11,11 +11,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import StatusPill from "@/components/patterns/StatusPill";
+import PrintDocButton from "@/components/patterns/PrintDocButton";
 import ChangeOrdersSection from "@/components/subcon/ChangeOrdersSection";
 import SpkScopeSection from "@/components/subcon/SpkScopeSection";
 import { formatIDR, formatDateWIB } from "@/utils/formatters";
 import api from "@/services/apiClient";
-import { PROCUREMENT } from "@/constants/testIds";
+import { PROCUREMENT, P61 } from "@/constants/testIds";
 import { useReference } from "@/context/ReferenceContext";
 
 
@@ -63,6 +64,10 @@ export default function SPKDetailSheet({ spk, open, canManage, onOpenChange, onC
           <SheetTitle>{spk.spk_number}</SheetTitle>
           <SheetDescription>{spk.title}</SheetDescription>
         </SheetHeader>
+        <div className="mt-3">
+          <PrintDocButton url={`/subcon/spk/${spk.id}/pdf`} testId={P61.spkPdf}
+            filename={spk.spk_number} label="Cetak SPK (PDF)" />
+        </div>
         <div className="mt-5 space-y-5">
           <div className="rounded-xl border bg-card p-4">
             <div className="mb-2"><StatusPill status={spk.status} group="spk_status" /></div>

@@ -227,7 +227,9 @@ async def pdf(quotation_id: str,
                      + ", ".join(kpr.get("missing") or []).replace("_", " ")
                      + " belum diisi)")
     lines.append(f"Berlaku sampai : {q.get('valid_until')}")
-    body = build_document_pdf(
+    import doc_layout as dl
+    _lay = await dl.get_layout(org, "PENAWARAN")
+    body = build_document_pdf(layout=_lay, images=await dl.images(org, _lay),
         title="PENAWARAN HARGA UNIT", doc_number=f"{q.get('no')} v{q.get('version')}",
         content="\n".join(lines),
         signatures=[{"role": "Sales", "name": q.get("created_by"), "signed_at": None},

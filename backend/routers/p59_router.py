@@ -15,6 +15,7 @@ Pemisahan tugas yang dipaksakan di sini:
 from fastapi import APIRouter, Depends, Query, Response
 
 import arrears_engine as arr
+import doc_layout as dl
 import late_fee_report as lfr
 import refund_debt as rd
 from core_utils import serialize_doc
@@ -50,8 +51,10 @@ async def waiver_report_pdf(date_from: str = Query(None), date_to: str = Query(N
                             user: dict = Depends(require_permission("late_fee", "view"))):
     ds = await lfr.dataset(_org(user), date_from=date_from, date_to=date_to,
                            deal_id=deal_id, own_email=_own(user))
+    layout = await dl.get_layout(_org(user), "LAPORAN")
     pdf = build_table_pdf(title=ds["title"], subtitle=ds["subtitle"], columns=ds["columns"],
-                          rows=ds["rows"], total_row=ds["total_row"])
+                          rows=ds["rows"], total_row=ds["total_row"], layout=layout,
+                          images=await dl.images(_org(user), layout))
     return Response(content=pdf, media_type="application/pdf", headers={
         "Content-Disposition": 'attachment; filename="laporan-keringanan-denda.pdf"'})
 
@@ -85,7 +88,9 @@ async def refund_debt(horizon: int = Query(6),
 async def refund_debt_pdf(horizon: int = Query(6),
                           user: dict = Depends(require_permission("finance", "view"))):
     ds = await rd.dataset(_org(user), horizon=horizon)
+    layout = await dl.get_layout(_org(user), "LAPORAN")
     pdf = build_table_pdf(title=ds["title"], subtitle=ds["subtitle"], columns=ds["columns"],
-                          rows=ds["rows"], total_row=ds["total_row"])
+                          rows=ds["rows"], total_row=ds["total_row"], layout=layout,
+                          images=await dl.images(_org(user), layout))
     return Response(content=pdf, media_type="application/pdf", headers={
         "Content-Disposition": 'attachment; filename="laporan-utang-refund.pdf"'})

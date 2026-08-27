@@ -80,6 +80,8 @@ from routers.payment_scheme_router import router as payment_scheme_router
 from routers.late_fee_router import router as late_fee_router
 # Fase 59 — laporan keringanan denda, kandidat tunggakan, laporan utang refund
 from routers.p59_router import router as p59_router
+# Fase 60 — konfigurasi tampilan dokumen (kop, footer, tanda tangan, baris biaya)
+from routers.doc_layout_router import router as doc_layout_router
 from routers.omnichannel_router import router as omnichannel_router
 from routers.broadcasts_router import router as broadcasts_router
 from routers.orgs_router import router as orgs_router
@@ -403,6 +405,7 @@ api.include_router(cancellation_router)
 api.include_router(payment_scheme_router)
 api.include_router(late_fee_router)
 api.include_router(p59_router)
+api.include_router(doc_layout_router)
 app.include_router(api)
 
 app.add_middleware(

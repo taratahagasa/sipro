@@ -555,7 +555,10 @@ async def pdf_bytes(org: str, hid: str) -> tuple:
     if doc.get("state") == CANCELLED:
         lines += ["", (f"DOKUMEN DIBATALKAN {doc.get('cancelled_at')} oleh "
                        f"{doc.get('cancelled_by')} — {doc.get('cancel_reason')}")]
-    pdf = build_document_pdf(
+    import doc_layout as dl
+    _lay = await dl.get_layout(org, "BAST")
+    _imgs = await dl.images(org, _lay)
+    pdf = build_document_pdf(layout=_lay, images=_imgs,
         title="BERITA ACARA SERAH TERIMA UNIT", doc_number=doc.get("number"),
         content="\n".join(lines), org_name=ORG_NAME,
         signatures=[{"role": "Pihak Pertama (Pengembang)", "name": doc.get("issued_by"),

@@ -85,6 +85,13 @@ GATES=(
   # direksi, tunggakan yang melewati batas SPR MENGUSULKAN (bukan membatalkan sendiri),
   # dan utang refund 2-1460 punya tanggal + cocok dengan buku besar.
   verify_p59.py
+  # Fase 60 — gate ke-51: tampilan dokumen (kop, footer, baris biaya, tanda tangan) bisa
+  # dikonfigurasi pemilik usaha, pratinjaunya dirender MESIN CETAK YANG SAMA, dan setiap
+  # jalur cetak (staf, portal pembeli, kwitansi, BAST, penawaran) memakai konfigurasi itu.
+  verify_p60.py
+  # Fase 61 — gate ke-52: SPK subkontraktor & PO pengadaan punya bentuk CETAK berkop,
+  # angkanya dari baris yang sama dengan penagihan, dan yang belum disetujui bertanda DRAFT.
+  verify_p61.py
 )
 
 fail=0

@@ -25,7 +25,11 @@ async def report_pdf(kind: str, user: dict = Depends(require_permission("finance
         ds = await fr.report_dataset(kind, user.get("org_id", ORG_ID))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    import doc_layout as dl
+    org = user.get("org_id", ORG_ID)
+    layout = await dl.get_layout(org, "LAPORAN")
     pdf = build_table_pdf(title=ds["title"], subtitle=ds.get("subtitle", ""),
-                          columns=ds["columns"], rows=ds["rows"], total_row=ds.get("total_row"))
+                          columns=ds["columns"], rows=ds["rows"], total_row=ds.get("total_row"),
+                          layout=layout, images=await dl.images(org, layout))
     return Response(content=pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="laporan-{kind}.pdf"'})
